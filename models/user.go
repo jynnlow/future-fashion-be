@@ -31,7 +31,7 @@ type User struct {
 	Chest    float32 `json:"chest"`
 	Waist    float32 `json:"waist"`
 	Hip      float32 `json:"hip"`
-	Order    []Order `gorm:"foreignKey:UserID"`
+	Orders   []Order
 }
 
 func (u *UserCRUDOperationsImpl) GetByID(id uint) (*User, error) {

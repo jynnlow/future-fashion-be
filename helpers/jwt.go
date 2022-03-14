@@ -52,10 +52,13 @@ func (claims *Claims) GetToken(r *http.Request) (string, error) {
 	if token == "" {
 		return "", errors.New("no request token")
 	}
-
-	splitToken := strings.Split(token, "Bearer ")
-	token = splitToken[1]
-	return token, nil
+	if len(token) > 7 {
+		splitToken := strings.Split(token, "Bearer ")
+		token = splitToken[1]
+		return token, nil
+	} else {
+		return "", errors.New("could not get token string")
+	}
 }
 
 func (claims *Claims) VerifyToken(userToken, tokenKey string) (*Claims, error) {

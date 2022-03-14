@@ -17,6 +17,8 @@ import (
 type UserHandlerActions interface {
 	SignUp(w http.ResponseWriter, r *http.Request)
 	Login(w http.ResponseWriter, r *http.Request)
+	GetPersonalInfo(w http.ResponseWriter, r *http.Request)
+	EditPersonalInfo(w http.ResponseWriter, r *http.Request)
 }
 
 type UserHandler struct {
@@ -116,7 +118,7 @@ func (u *UserHandler) Login(w http.ResponseWriter, r *http.Request) {
 		helpers.JsonResponse(
 			w,
 			"FAIL",
-			"NOTE: User does not exist",
+			"NOTE: User does not exist. Please create a user account.",
 			nil,
 		)
 		return
@@ -127,7 +129,7 @@ func (u *UserHandler) Login(w http.ResponseWriter, r *http.Request) {
 		helpers.JsonResponse(
 			w,
 			"FAIL",
-			"NOTE: Incorrect Password",
+			"NOTE: Incorrect Password. Please try again.",
 			nil,
 		)
 		return
@@ -166,5 +168,104 @@ func (u *UserHandler) Login(w http.ResponseWriter, r *http.Request) {
 		"SUCCESS",
 		fmt.Sprintf("%v logged in successfully", foundUser.Username),
 		tokenEncodedString,
+	)
+}
+
+func (u *UserHandler) GetPersonalInfo(w http.ResponseWriter, r *http.Request) {
+	tokenKey, err := u.CredentialModel.GetTokenKey()
+	if err != nil {
+		helpers.JsonResponse(
+			w,
+			"FAIL",
+			err.Error(),
+			nil,
+		)
+		return
+	}
+
+	verifiedToken, err := helpers.GetVerifiedToken(tokenKey, r)
+	if err != nil {
+		helpers.JsonResponse(
+			w,
+			"FAIL",
+			err.Error(),
+			nil,
+		)
+		return
+	}
+
+	user, err := u.UserModel.GetByID(verifiedToken.Id)
+	if err != nil {
+		helpers.JsonResponse(
+			w,
+			"FAIL",
+			err.Error(),
+			nil,
+		)
+		return
+	}
+
+	helpers.JsonResponse(
+		w,
+		"SUCCESS",
+		"",
+		user,
+	)
+}
+
+func (u *UserHandler) EditPersonalInfo(w http.ResponseWriter, r *http.Request) {
+	tokenKey, err := u.CredentialModel.GetTokenKey()
+	if err != nil {
+		helpers.JsonResponse(
+			w,
+			"FAIL",
+			err.Error(),
+			nil,
+		)
+		return
+	}
+
+	verifiedToken, err := helpers.GetVerifiedToken(tokenKey, r)
+	if err != nil {
+		helpers.JsonResponse(
+			w,
+			"FAIL",
+			err.Error(),
+			nil,
+		)
+		return
+	}
+
+	//dto user does not have all user fields - etc: chest, waist, hip
+	editReq := &models.User{}
+	err = json.NewDecoder(r.Body).Decode(editReq)
+	if err != nil {
+		helpers.JsonResponse(
+			w,
+			"FAIL",
+			err.Error(),
+			nil,
+		)
+		return
+	}
+
+	editReq.ID = verifiedToken.Id
+
+	dbUserRes, err := u.UserModel.Update(editReq)
+	if err != nil {
+		helpers.JsonResponse(
+			w,
+			"FAIL",
+			err.Error(),
+			nil,
+		)
+		return
+	}
+
+	helpers.JsonResponse(
+		w,
+		"SUCCESS",
+		fmt.Sprintf("%v is updated successfully", dbUserRes.Username),
+		dbUserRes,
 	)
 }

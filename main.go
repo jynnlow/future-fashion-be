@@ -72,18 +72,26 @@ func main() {
 	//User Handlers
 	r.HandleFunc("/user/signup", userHandler.SignUp).Methods("POST")
 	r.HandleFunc("/user/login", userHandler.Login).Methods("POST")
+	r.HandleFunc("/user/edit-personal-info", userHandler.EditPersonalInfo).Methods("PATCH")
+	r.HandleFunc("/user/personal-info", userHandler.GetPersonalInfo).Methods("GET")
+
 	//Admin Handlers
 	r.HandleFunc("/admin/create-customer", adminHandler.CreateCustomer).Methods("POST")
 	r.HandleFunc("/admin/delete-customer", adminHandler.DeleteCustomer).Methods("DELETE")
 	r.HandleFunc("/admin/list-customers", adminHandler.ListCustomers).Methods("GET")
 	r.HandleFunc("/admin/edit-customer", adminHandler.EditCustomer).Methods("PATCH")
+
 	//Product Handlers
 	r.HandleFunc("/product/create-product", productHandler.CreateProduct).Methods("POST")
 	r.HandleFunc("/product/delete-product", productHandler.DeleteProduct).Methods("DELETE")
 	r.HandleFunc("/product/list-products", productHandler.ListProducts).Methods("GET")
 	r.HandleFunc("/product/edit-product", productHandler.EditProduct).Methods("PATCH")
 
-	r.HandleFunc("/product/create-order", orderHandler.CreateOrder).Methods("POST")
+	//Order Handlers
+	r.HandleFunc("/order/create-order", orderHandler.CreateOrder).Methods("POST")
+	r.HandleFunc("/order/delete-order", orderHandler.DeleteOrder).Methods("DELETE")
+	r.HandleFunc("/order/list-orders", orderHandler.ListOrders).Methods("GET")
+	r.HandleFunc("/order/list-orders-user", orderHandler.ListOrdersByUserID).Methods("GET")
 
 	fmt.Println("HTTP server running on http://127.0.0.1:8080")
 	err = http.ListenAndServe(":8080", r)

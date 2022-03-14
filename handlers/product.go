@@ -189,28 +189,6 @@ func (p *ProductHandler) DeleteProduct(w http.ResponseWriter, r *http.Request) {
 }
 
 func (p *ProductHandler) ListProducts(w http.ResponseWriter, r *http.Request) {
-	// tokenKey, err := p.CredentialModel.GetTokenKey()
-	// if err != nil {
-	// 	helpers.JsonResponse(
-	// 		w,
-	// 		"FAIL",
-	// 		err.Error(),
-	// 		nil,
-	// 	)
-	// 	return
-	// }
-
-	// _, err = helpers.GetVerifiedToken(tokenKey, r)
-	// if err != nil {
-	// 	helpers.JsonResponse(
-	// 		w,
-	// 		"FAIL",
-	// 		err.Error(),
-	// 		nil,
-	// 	)
-	// 	return
-	// }
-
 	products, err := p.ProductModel.GetAll()
 	if err != nil {
 		helpers.JsonResponse(
@@ -222,23 +200,103 @@ func (p *ProductHandler) ListProducts(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// err = helpers.JsonUserList(products, w)
-	// if err != nil {
-	// 	helpers.JsonResponse(
-	// 		w,
-	// 		"FAIL",
-	// 		err.Error(),
-	// 		nil,
-	// 	)
-	// 	return
-	// }
+	productsResponse := &dto.ListProductsResponse{
+		Products: []*dto.ProductResponse{},
+	}
+
+	for _, product := range products {
+		var picturesList []string
+		err := json.Unmarshal([]byte(product.Pictures), &picturesList)
+		if err != nil {
+			helpers.JsonResponse(
+				w,
+				"FAIL",
+				err.Error(),
+				nil,
+			)
+			return
+		}
+
+		xsModel, err := unmarshalSizing(product.XS)
+		if err != nil {
+			helpers.JsonResponse(
+				w,
+				"FAIL",
+				err.Error(),
+				nil,
+			)
+			return
+		}
+		sModel, err := unmarshalSizing(product.S)
+		if err != nil {
+			helpers.JsonResponse(
+				w,
+				"FAIL",
+				err.Error(),
+				nil,
+			)
+			return
+		}
+		mModel, err := unmarshalSizing(product.M)
+		if err != nil {
+			helpers.JsonResponse(
+				w,
+				"FAIL",
+				err.Error(),
+				nil,
+			)
+			return
+		}
+		lModel, err := unmarshalSizing(product.L)
+		if err != nil {
+			helpers.JsonResponse(
+				w,
+				"FAIL",
+				err.Error(),
+				nil,
+			)
+			return
+		}
+		xlModel, err := unmarshalSizing(product.XL)
+		if err != nil {
+			helpers.JsonResponse(
+				w,
+				"FAIL",
+				err.Error(),
+				nil,
+			)
+			return
+		}
+
+		productsResponse.Products = append(productsResponse.Products, &dto.ProductResponse{
+			ID:       product.ID,
+			Item:     product.Item,
+			Price:    product.Price,
+			Stock:    product.Stock,
+			Pictures: picturesList,
+			XS:       xsModel,
+			S:        sModel,
+			M:        mModel,
+			L:        lModel,
+			XL:       xlModel,
+		})
+	}
 
 	helpers.JsonResponse(
 		w,
 		"SUCCESS",
 		"SUCCESS",
-		products,
+		productsResponse,
 	)
+}
+
+func unmarshalSizing(sizing string) (*dto.Sizing, error) {
+	var sizingModel *dto.Sizing
+	err := json.Unmarshal([]byte(sizing), &sizingModel)
+	if err != nil {
+		return nil, err
+	}
+	return sizingModel, nil
 }
 
 func (p *ProductHandler) EditProduct(w http.ResponseWriter, r *http.Request) {

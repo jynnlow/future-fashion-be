@@ -7,11 +7,28 @@ type ProductRequest struct {
 	Price    float32  `json:"price"`
 	Stock    int      `json:"stock"`
 	Pictures []string `json:"pictures"`
-	XS       Sizing   `json:"xs"`
-	S        Sizing   `json:"s"`
-	M        Sizing   `json:"m"`
-	L        Sizing   `json:"l"`
-	XL       Sizing   `json:"xl"`
+	XS       *Sizing  `json:"xs"`
+	S        *Sizing  `json:"s"`
+	M        *Sizing  `json:"m"`
+	L        *Sizing  `json:"l"`
+	XL       *Sizing  `json:"xl"`
+}
+
+type ProductResponse struct {
+	ID       uint     `json:"id"`
+	Item     string   `json:"item"`
+	Price    float32  `json:"price"`
+	Stock    int      `json:"stock"`
+	Pictures []string `json:"pictures"`
+	XS       *Sizing  `json:"xs"`
+	S        *Sizing  `json:"s"`
+	M        *Sizing  `json:"m"`
+	L        *Sizing  `json:"l"`
+	XL       *Sizing  `json:"xl"`
+}
+
+type ListProductsResponse struct {
+	Products []*ProductResponse `json:"products"`
 }
 
 type Sizing struct {

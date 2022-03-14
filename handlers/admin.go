@@ -293,7 +293,7 @@ func (a *AdminHandler) EditCustomer(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	//check if customer ID is provided
+	// check if customer ID is provided
 	if editReq.ID == 0 {
 		helpers.JsonResponse(
 			w,
