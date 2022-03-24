@@ -11,6 +11,7 @@ import (
 	"future-fashion/models"
 
 	"github.com/gorilla/mux"
+	"github.com/rs/cors"
 )
 
 func main() {
@@ -79,7 +80,9 @@ func main() {
 	r.HandleFunc("/admin/create-customer", adminHandler.CreateCustomer).Methods("POST")
 	r.HandleFunc("/admin/delete-customer", adminHandler.DeleteCustomer).Methods("DELETE")
 	r.HandleFunc("/admin/list-customers", adminHandler.ListCustomers).Methods("GET")
+	r.HandleFunc("/admin/get-customer-info", adminHandler.GetCustomerInfo).Methods("GET")
 	r.HandleFunc("/admin/edit-customer", adminHandler.EditCustomer).Methods("PATCH")
+	r.HandleFunc("/admin/login", adminHandler.AdminLogin).Methods("POST")
 
 	//Product Handlers
 	r.HandleFunc("/product/create-product", productHandler.CreateProduct).Methods("POST")
@@ -90,11 +93,13 @@ func main() {
 	//Order Handlers
 	r.HandleFunc("/order/create-order", orderHandler.CreateOrder).Methods("POST")
 	r.HandleFunc("/order/delete-order", orderHandler.DeleteOrder).Methods("DELETE")
+	r.HandleFunc("/order/edit-order-status", orderHandler.EditOrderStatus).Methods("PATCH")
 	r.HandleFunc("/order/list-orders", orderHandler.ListOrders).Methods("GET")
 	r.HandleFunc("/order/list-orders-user", orderHandler.ListOrdersByUserID).Methods("GET")
 
 	fmt.Println("HTTP server running on http://127.0.0.1:8080")
-	err = http.ListenAndServe(":8080", r)
+	handler := cors.AllowAll().Handler(r)
+	err = http.ListenAndServe(":8080", handler)
 	if err != nil {
 		log.Fatal(err)
 	}

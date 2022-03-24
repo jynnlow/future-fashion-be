@@ -81,15 +81,15 @@ func (o *OrderCRUDOperationsImpl) Update(orderReq *Order) (*Order, error) {
 	if err != nil {
 		return nil, err
 	}
-	if orderReq.Total != 0 && foundOrder.Total != orderReq.Total {
-		foundOrder.Total = orderReq.Total
-	}
+	// if orderReq.Total != 0 && foundOrder.Total != orderReq.Total {
+	// 	foundOrder.Total = orderReq.Total
+	// }
 	if orderReq.Status != "" && foundOrder.Status != orderReq.Status {
 		foundOrder.Status = orderReq.Status
 	}
-	if orderReq.Snapshots != "" && foundOrder.Snapshots != orderReq.Snapshots {
-		foundOrder.Snapshots = orderReq.Snapshots
-	}
+	// if orderReq.Snapshots != "" && foundOrder.Snapshots != orderReq.Snapshots {
+	// 	foundOrder.Snapshots = orderReq.Snapshots
+	// }
 
 	//update order with all field except userID
 	err = o.DB.Save(foundOrder).Error

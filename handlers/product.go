@@ -3,14 +3,15 @@ package handlers
 import (
 	"encoding/json"
 	"fmt"
+	"net/http"
+	"strconv"
+
+	"go.uber.org/zap"
+	"gorm.io/gorm"
+
 	"future-fashion/dto"
 	"future-fashion/helpers"
 	"future-fashion/models"
-	"strconv"
-
-	"net/http"
-
-	"go.uber.org/zap"
 )
 
 type ProductHandlerActions interface {
@@ -199,7 +200,6 @@ func (p *ProductHandler) ListProducts(w http.ResponseWriter, r *http.Request) {
 		)
 		return
 	}
-
 	productsResponse := &dto.ListProductsResponse{
 		Products: []*dto.ProductResponse{},
 	}
@@ -333,8 +333,8 @@ func (p *ProductHandler) EditProduct(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//dto user does not have all user fields - etc: chest, waist, hip
-	editReq := &models.Product{}
-	err = json.NewDecoder(r.Body).Decode(editReq)
+	updateProductReq := &dto.UpdateProductRequest{}
+	err = json.NewDecoder(r.Body).Decode(updateProductReq)
 	if err != nil {
 		helpers.JsonResponse(
 			w,
@@ -345,18 +345,29 @@ func (p *ProductHandler) EditProduct(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	//check if customer ID is provided
-	if editReq.ID == 0 {
+	//check if product ID is provided
+	if updateProductReq.ID == 0 {
 		helpers.JsonResponse(
 			w,
 			"FAIL",
-			"User request ID does not exist",
+			"Product request ID does not exist",
 			nil,
 		)
 		return
 	}
 
-	dbProductRes, err := p.ProductModel.Update(editReq)
+	productModel, err := p.convertUpdateProductDTOToProductModel(updateProductReq)
+	if err != nil {
+		helpers.JsonResponse(
+			w,
+			"FAIL",
+			err.Error(),
+			nil,
+		)
+		return
+	}
+
+	dbProductRes, err := p.ProductModel.Update(productModel)
 	if err != nil {
 		helpers.JsonResponse(
 			w,
@@ -407,6 +418,53 @@ func (p *ProductHandler) convertProductDTOToProductModel(productReq *dto.Product
 	}
 
 	return &models.Product{
+		Item:     productReq.Item,
+		Price:    productReq.Price,
+		Stock:    productReq.Stock,
+		Pictures: string(picturesJsonByte),
+		XS:       string(xsJsonByte),
+		S:        string(sJsonByte),
+		M:        string(mJsonByte),
+		L:        string(lJsonByte),
+		XL:       string(xlJsonByte),
+	}, nil
+}
+
+func (p *ProductHandler) convertUpdateProductDTOToProductModel(productReq *dto.UpdateProductRequest) (*models.Product, error) {
+	picturesJsonByte, err := json.Marshal(productReq.Pictures)
+	if err != nil {
+		return nil, err
+	}
+
+	xsJsonByte, err := json.Marshal(productReq.XS)
+	if err != nil {
+		return nil, err
+	}
+
+	sJsonByte, err := json.Marshal(productReq.S)
+	if err != nil {
+		return nil, err
+	}
+
+	mJsonByte, err := json.Marshal(productReq.M)
+	if err != nil {
+		return nil, err
+	}
+
+	lJsonByte, err := json.Marshal(productReq.L)
+	if err != nil {
+		return nil, err
+	}
+
+	xlJsonByte, err := json.Marshal(productReq.XL)
+	if err != nil {
+		return nil, err
+	}
+
+	return &models.Product{
+		Model: gorm.Model{
+			ID: productReq.ID,
+		},
 		Item:     productReq.Item,
 		Price:    productReq.Price,
 		Stock:    productReq.Stock,

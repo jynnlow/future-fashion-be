@@ -10,6 +10,7 @@ import (
 	"strconv"
 
 	"go.uber.org/zap"
+	"gorm.io/gorm"
 )
 
 type OrderHandlerActions interface {
@@ -17,7 +18,7 @@ type OrderHandlerActions interface {
 	DeleteOrder(w http.ResponseWriter, r *http.Request)
 	ListOrders(w http.ResponseWriter, r *http.Request)
 	ListOrdersByUserID(w http.ResponseWriter, r *http.Request)
-	EditOrder(w http.ResponseWriter, r *http.Request)
+	EditOrderStatus(w http.ResponseWriter, r *http.Request)
 }
 
 type OrderHandler struct {
@@ -232,6 +233,8 @@ func (o *OrderHandler) ListOrders(w http.ResponseWriter, r *http.Request) {
 			Total:     order.Total,
 			Status:    order.Status,
 			Snapshots: snapshotsObj,
+			UserID:    order.UserID,
+			CreatedAt: order.CreatedAt,
 		})
 	}
 
@@ -296,6 +299,7 @@ func (o *OrderHandler) ListOrdersByUserID(w http.ResponseWriter, r *http.Request
 			Total:     order.Total,
 			Status:    order.Status,
 			Snapshots: snapshotsObj,
+			CreatedAt: order.CreatedAt,
 		})
 	}
 
@@ -305,6 +309,102 @@ func (o *OrderHandler) ListOrdersByUserID(w http.ResponseWriter, r *http.Request
 		"SUCCESS",
 		orderResponse,
 	)
+}
+
+func (o *OrderHandler) EditOrderStatus(w http.ResponseWriter, r *http.Request) {
+	tokenKey, err := o.CredentialModel.GetTokenKey()
+	if err != nil {
+		helpers.JsonResponse(
+			w,
+			"FAIL",
+			err.Error(),
+			nil,
+		)
+		return
+	}
+
+	verifiedToken, err := helpers.GetVerifiedToken(tokenKey, r)
+	if err != nil {
+		helpers.JsonResponse(
+			w,
+			"FAIL",
+			err.Error(),
+			nil,
+		)
+		return
+	}
+
+	if verifiedToken.Role != "admin" {
+		helpers.JsonResponse(
+			w,
+			"FAIL",
+			"NOTE: Only admin is allowed for this operation",
+			nil,
+		)
+		return
+	}
+
+	updateOrderReq := &dto.EditOrderRequest{}
+	err = json.NewDecoder(r.Body).Decode(updateOrderReq)
+	if err != nil {
+		helpers.JsonResponse(
+			w,
+			"FAIL",
+			err.Error(),
+			nil,
+		)
+		return
+	}
+
+	//check if order ID is provided
+	if updateOrderReq.ID == 0 {
+		helpers.JsonResponse(
+			w,
+			"FAIL",
+			"Order request ID does not exist",
+			nil,
+		)
+		return
+	}
+
+	orderModel, err := o.convertEditOrderDTOToOrderModel(updateOrderReq)
+	if err != nil {
+		helpers.JsonResponse(
+			w,
+			"FAIL",
+			err.Error(),
+			nil,
+		)
+		return
+	}
+
+	dbOrderRes, err := o.OrderModel.Update(orderModel)
+	if err != nil {
+		helpers.JsonResponse(
+			w,
+			"FAIL",
+			err.Error(),
+			nil,
+		)
+		return
+	}
+
+	helpers.JsonResponse(
+		w,
+		"SUCCESS",
+		"SUCCESS",
+		dbOrderRes,
+	)
+}
+
+func (o *OrderHandler) convertEditOrderDTOToOrderModel(orderReq *dto.EditOrderRequest) (*models.Order, error) {
+	return &models.Order{
+		Model: gorm.Model{
+			ID: orderReq.ID,
+		},
+		Status: orderReq.Status,
+		UserID: orderReq.UserID,
+	}, nil
 }
 
 func (o *OrderHandler) convertOrderDTOToOrderModel(orderReq *dto.OrderRequest) (*models.Order, error) {

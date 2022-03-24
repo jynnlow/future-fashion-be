@@ -45,7 +45,7 @@ func (u *UserHandler) SignUp(w http.ResponseWriter, r *http.Request) {
 		helpers.JsonResponse(
 			w,
 			"FAIL",
-			"Please fill in all the required information to sign up an accouont",
+			"Please fill in all the required information (username, password, and dob) to sign up an account",
 			nil,
 		)
 		return
@@ -119,6 +119,16 @@ func (u *UserHandler) Login(w http.ResponseWriter, r *http.Request) {
 			w,
 			"FAIL",
 			"NOTE: User does not exist. Please create a user account.",
+			nil,
+		)
+		return
+	}
+
+	if foundUser.Role != "customer" {
+		helpers.JsonResponse(
+			w,
+			"FAIL",
+			"Make sure you are a member.",
 			nil,
 		)
 		return
